@@ -16,3 +16,8 @@ i=0
 while(i<len(list)):
     print(list[i])
     i +=1
+
+print("for loop using")
+
+for i in list:
+    print(i)
