@@ -4,3 +4,13 @@ def star(n):
         print("*"*i)
 
 star(3)
+
+
+def StarRecursive(n):
+    if(n==0):
+        return
+    
+    print("*"*n)
+    StarRecursive(n-1)
+
+StarRecursive(5)
