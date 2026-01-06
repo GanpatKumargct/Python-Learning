@@ -27,8 +27,12 @@ class ElectricCar(Car):
     def fuel_type(self):
         return "Battery charge"
     
+    # def fuel_type(self, battery_Type):
+    #     return f"This is a Electric vehicle with {battery_Type} battery."
+    
 safari = Car("Safari","Tata")
 print(safari.fuel_type())
 
 suv = ElectricCar("SUV", "Tata", "70kwh")
 print(suv.fuel_type())
+# print(suv.fuel_type("DC"))
