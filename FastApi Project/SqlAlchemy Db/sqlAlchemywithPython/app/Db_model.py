@@ -4,7 +4,7 @@ from sqlalchemy.sql.sqltypes import TIMESTAMP # type: ignore
 from sqlalchemy.sql.expression import text    #type:ignore
 from .database import Base
 
-
+# ORM Model -  Table ka model
 class Product(Base):
     __tablename__ = "Product"
 
