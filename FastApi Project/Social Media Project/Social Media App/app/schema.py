@@ -13,3 +13,8 @@ class PostCreate(PostBase):
 class PostUpdate(PostBase):
     pass
 
+class ResponseModel(PostBase):
+    id:int
+
+    class Config:
+        orm_mode = True
