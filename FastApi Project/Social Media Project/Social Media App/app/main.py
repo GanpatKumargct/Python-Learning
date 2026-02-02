@@ -14,7 +14,7 @@ def home():
 
 
 @app.post("/posts")
-def create_Post(post:schema.Post, db :Session = Depends(get_db) ):
+def create_Post(post:schema.PostCreate, db :Session = Depends(get_db) ):
     new_post = db.add(model.Post(**post.dict()))
     db.commit()
     
@@ -41,7 +41,7 @@ def get_post(id:int, db :Session = Depends(get_db)):
 
 
 @app.put("/posts/{id}")
-def update_posts(id:int, post:schema.Post, db :Session = Depends(get_db)):
+def update_posts(id:int, post:schema.PostUpdate, db :Session = Depends(get_db)):
 
     existing_post= db.query(model.Post).filter(model.Post.id == id).first()
 
