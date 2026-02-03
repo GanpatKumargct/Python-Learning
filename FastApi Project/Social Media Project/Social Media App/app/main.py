@@ -1,8 +1,10 @@
 from fastapi import FastAPI, Depends, HTTPException, status
-from . import model, schema
+from . import model, schema, util
 from .database import engine, get_db, Base
 from sqlalchemy.orm import Session
 from typing import List
+
+
 
 
 app = FastAPI()
@@ -71,4 +73,23 @@ def delete_posts(id: int, db: Session = Depends(get_db)):
 
     db.delete(post)
     db.commit()
+
+
+
+
+
+
     
+@app.post("/users", status_code=status.HTTP_201_CREATED, response_model=schema.userResponse)
+def create_user(user: schema.user, db: Session = Depends(get_db)):
+
+    hashed = util.hash_password(user.password)
+    user.password = hashed
+
+
+    new_user = model.User(**user.model_dump())
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    return new_user
