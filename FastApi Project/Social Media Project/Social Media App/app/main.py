@@ -5,7 +5,6 @@ from .router import post, user, auth
 
 
 app = FastAPI()
-
 model.Base.metadata.create_all(bind=engine)
 
 @app.get("/")
