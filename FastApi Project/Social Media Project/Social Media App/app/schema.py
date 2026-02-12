@@ -3,6 +3,13 @@ from pydantic import BaseModel, EmailStr, ConfigDict
 from datetime import datetime
 from typing import Optional
 
+class userResponse(BaseModel):
+    id : int
+    email: EmailStr
+    created_at : datetime
+    
+    model_config = ConfigDict(from_attributes=True)
+
 class PostBase(BaseModel):
     title: str
     content: str
@@ -17,7 +24,8 @@ class PostUpdate(PostBase):
 
 class ResponseModel(PostBase):
     id:int
-
+    created_at:datetime
+    owner:userResponse
     class Config:
         orm_mode = True
 
@@ -25,13 +33,6 @@ class user(BaseModel):
     email : EmailStr
     password : str
 
-
-class userResponse(BaseModel):
-    id : int
-    email: EmailStr
-    created_at : datetime
-    
-    model_config = ConfigDict(from_attributes=True)
 
 
 class userLogin(BaseModel):

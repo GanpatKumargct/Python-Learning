@@ -11,8 +11,10 @@ router = APIRouter(
 )
 
 @router.post("/", status_code=201, response_model=schema.ResponseModel)
-def create_Post(post:schema.PostCreate, db :Session = Depends(get_db) , user_id :int=Depends(Oauth2.get_current_user)):
-    new_post = model.Post(**post.model_dump())
+def create_Post(post:schema.PostCreate, db :Session = Depends(get_db) , current_user :int=Depends(Oauth2.get_current_user)):
+    
+    print(current_user.email)
+    new_post = model.Post(owner_id=current_user.id, **post.model_dump())
     db.add(new_post)
     db.commit()
     db.refresh(new_post)
@@ -21,17 +23,25 @@ def create_Post(post:schema.PostCreate, db :Session = Depends(get_db) , user_id 
     return new_post
 
 @router.get("/", response_model=List[schema.ResponseModel])
-def get_posts(db :Session = Depends(get_db), user_id :int=Depends(Oauth2.get_current_user)):
+def get_posts(db :Session = Depends(get_db), current_user :int=Depends(Oauth2.get_current_user),
+               lim:int =10, skip :int=0, search:str=""):
 
-    all_posts= db.query(model.Post).all()
+    # this will return all the post doesn't matter which user is created(all post public)
+    all_posts= db.query(model.Post).filter(model.Post.title.contains
+                                           (search)).limit(lim).offset(skip).all()
+    print(lim)
+    print(search)
+    return all_posts
+
+    # This will return which user is logged in
+    # all_posts = db.query(model.Post).filter(model.Post.owner_id == current_user.id).all()
 
     # return {"Message":"Here is your All Posts", 
     #         "posts":all_posts}
-
-    return all_posts
+    
 
 @router.get("/{id}", response_model=schema.ResponseModel)
-def get_post(id:int, db :Session = Depends(get_db), user_id :int=Depends(Oauth2.get_current_user)):
+def get_post(id:int, db :Session = Depends(get_db), current_user :int=Depends(Oauth2.get_current_user)):
 
     post= db.query(model.Post).filter(model.Post.id == id).first()
 
@@ -41,13 +51,16 @@ def get_post(id:int, db :Session = Depends(get_db), user_id :int=Depends(Oauth2.
 
 
 @router.put("/{id}", response_model=schema.ResponseModel)
-def update_posts(id:int, post:schema.PostUpdate, db :Session = Depends(get_db),  user_id :int=Depends(Oauth2.get_current_user)):
+def update_posts(id:int, post:schema.PostUpdate, db :Session = Depends(get_db),  current_user :int=Depends(Oauth2.get_current_user)):
 
     existing_post= db.query(model.Post).filter(model.Post.id == id).first()
 
     if not existing_post:
         raise HTTPException(status_code=404, detail="Post not found")
-
+    
+    if existing_post.owner_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User is not authorized to perform this actions.")
+    # existing_post.owner_id = current_user.id
     existing_post.title = post.title
     existing_post.content = post.content
     existing_post.published = post.published
@@ -59,12 +72,15 @@ def update_posts(id:int, post:schema.PostUpdate, db :Session = Depends(get_db), 
     
 
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_posts(id: int, db: Session = Depends(get_db), user_id :int=Depends(Oauth2.get_current_user)):
+def delete_posts(id: int, db: Session = Depends(get_db), current_user :int=Depends(Oauth2.get_current_user)):
     post = db.query(model.Post).filter(model.Post.id == id).first()
 
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
 
+    if post.owner_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User is not authorized to perform this actions.")
+    
     db.delete(post)
     db.commit()
 
