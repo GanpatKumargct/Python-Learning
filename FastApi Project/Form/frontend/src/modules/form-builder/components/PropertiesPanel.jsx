@@ -1,5 +1,5 @@
 import { useFormContext } from '../../../context/FormContext';
-import { Trash2 } from 'lucide-react';
+import { Trash2, GripVertical, Settings2 } from 'lucide-react';
 
 export const PropertiesPanel = () => {
   const { schema, activePageId, selectedFieldId, updateField, removeField } = useFormContext();
@@ -9,72 +9,55 @@ export const PropertiesPanel = () => {
 
   if (!selectedField) {
     return (
-      <div className="w-80 bg-white border-l border-gray-200 p-6 flex flex-col items-center justify-center text-center text-gray-400 z-10 shadow-[-4px_0_24px_rgba(0,0,0,0.02)]">
-        <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
-          <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-          </svg>
-        </div>
-        <p className="text-sm">Select a field to edit its properties</p>
+      <div className="w-80 bg-white border-l border-gray-200 p-6 flex flex-col items-center justify-center text-center text-gray-500 z-10 shadow-[-4px_0_24px_rgba(0,0,0,0.02)] hidden lg:flex">
+        <Settings2 size={48} className="text-gray-200 mb-4" />
+        <p className="text-sm font-medium">Field Settings</p>
+        <p className="text-xs text-gray-400 mt-2">Select a field on the canvas to configure it</p>
       </div>
     );
   }
 
   return (
     <div className="w-80 bg-white border-l border-gray-200 overflow-y-auto flex flex-col z-10 shadow-[-4px_0_24px_rgba(0,0,0,0.02)]">
-      <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-        <h2 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Field Settings</h2>
+      <div className="p-5 border-b border-gray-200 flex items-center justify-between bg-gray-50">
+        <h2 className="text-sm font-bold text-gray-700 tracking-wide">Options</h2>
         <button 
           onClick={() => activePageId && removeField(activePageId, selectedField.id)}
-          className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-colors"
+          className="text-gray-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-full transition-colors"
           title="Delete Field"
         >
           <Trash2 size={18} />
         </button>
       </div>
       
-      <div className="p-5 space-y-6">
+      <div className="p-6 space-y-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Field Label</label>
-          <input 
-            type="text" 
-            value={selectedField.label}
-            onChange={(e) => activePageId && updateField(activePageId, selectedField.id, { label: e.target.value })}
-            className="input-field"
-          />
+          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Field Type</label>
+          <div className="p-3 bg-gray-50 rounded border border-gray-200 text-sm font-medium text-gray-700 capitalize">
+            {selectedField.type}
+          </div>
         </div>
 
         {['text', 'textarea', 'number', 'email'].includes(selectedField.type) && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Placeholder</label>
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Placeholder Text</label>
             <input 
               type="text" 
+              placeholder="E.g., enter your email"
               value={selectedField.placeholder || ''}
               onChange={(e) => activePageId && updateField(activePageId, selectedField.id, { placeholder: e.target.value })}
-              className="input-field"
+              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-primary-600 focus:ring-1 focus:ring-primary-600 text-sm transition-colors"
             />
           </div>
         )}
 
-        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
-          <label className="text-sm font-medium text-gray-700">Required Field</label>
-          <label className="relative inline-flex items-center cursor-pointer">
-            <input 
-              type="checkbox" 
-              className="sr-only peer" 
-              checked={selectedField.required}
-              onChange={(e) => activePageId && updateField(activePageId, selectedField.id, { required: e.target.checked })}
-            />
-            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
-          </label>
-        </div>
-
         {['select', 'radio', 'checkbox'].includes(selectedField.type) && selectedField.options && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Options</label>
-            <div className="space-y-2">
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Choices</label>
+            <div className="space-y-3">
               {selectedField.options.map((opt, idx) => (
-                <div key={idx} className="flex gap-2">
+                <div key={idx} className="flex gap-2 items-center group">
+                  <GripVertical size={16} className="text-gray-300 cursor-grab" />
                   <input 
                     type="text" 
                     value={opt}
@@ -83,28 +66,30 @@ export const PropertiesPanel = () => {
                       newOptions[idx] = e.target.value;
                       activePageId && updateField(activePageId, selectedField.id, { options: newOptions });
                     }}
-                    className="input-field"
+                    className="w-full px-0 py-1 border-b border-transparent hover:border-gray-300 focus:border-primary-600 focus:outline-none text-sm transition-colors"
                   />
                   <button 
                     onClick={() => {
                       const newOptions = selectedField.options?.filter((_, i) => i !== idx);
                       activePageId && updateField(activePageId, selectedField.id, { options: newOptions });
                     }}
-                    className="p-2 text-gray-400 hover:text-red-500 rounded border border-gray-200"
+                    className="p-1 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
                   >
                     ×
                   </button>
                 </div>
               ))}
-              <button 
-                onClick={() => {
-                  const newOptions = [...(selectedField.options || []), `Option ${(selectedField.options?.length || 0) + 1}`];
-                  activePageId && updateField(activePageId, selectedField.id, { options: newOptions });
-                }}
-                className="w-full py-2 text-sm text-primary-600 bg-primary-50 rounded border border-primary-100 hover:bg-primary-100 font-medium transition-colors"
-              >
-                + Add Option
-              </button>
+              <div className="pt-2 pl-6">
+                <button 
+                  onClick={() => {
+                    const newOptions = [...(selectedField.options || []), `Option ${(selectedField.options?.length || 0) + 1}`];
+                    activePageId && updateField(activePageId, selectedField.id, { options: newOptions });
+                  }}
+                  className="text-sm text-primary-600 font-medium hover:underline focus:outline-none"
+                >
+                  Add option
+                </button>
+              </div>
             </div>
           </div>
         )}

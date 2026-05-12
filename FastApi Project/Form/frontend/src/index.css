@@ -4,24 +4,34 @@
 
 @layer base {
   body {
-    @apply bg-gray-50 text-gray-900 font-sans antialiased;
+    @apply bg-gray-50 text-gray-800 font-sans antialiased;
   }
 }
 
 @layer components {
-  .glass-panel {
-    @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-xl rounded-2xl;
+  .google-card {
+    @apply bg-white border border-gray-300 rounded-lg shadow-[0_2px_4px_rgba(0,0,0,0.1)] transition-all duration-200 relative;
   }
   
+  .google-card-active {
+    @apply bg-white border border-transparent shadow-[0_2px_4px_rgba(0,0,0,0.1),_0_0_0_2px_#7c3aed] rounded-lg transition-all duration-200 relative;
+  }
+  
+  /* Top purple border for the active field to mimic Google Forms */
+  .google-card-active::before {
+    content: '';
+    @apply absolute top-0 left-[-2px] right-[-2px] h-[6px] bg-primary-600 rounded-t-lg;
+  }
+
   .btn-primary {
-    @apply px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg shadow-sm transition-all duration-200 active:scale-95;
+    @apply px-6 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded shadow-sm transition-all duration-200;
   }
   
   .btn-secondary {
-    @apply px-4 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-medium rounded-lg shadow-sm transition-all duration-200 active:scale-95;
+    @apply px-4 py-2 bg-white hover:bg-gray-50 text-primary-700 font-medium rounded transition-all duration-200;
   }
   
-  .input-field {
-    @apply w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors;
+  .input-google {
+    @apply w-full px-0 py-2 border-b border-gray-300 bg-transparent focus:outline-none focus:border-b-2 focus:border-primary-600 transition-colors rounded-none placeholder-gray-400;
   }
 }
