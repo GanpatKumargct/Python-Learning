@@ -1,0 +1,113 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: erp_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: erp_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  redis:
+    image: redis:alpine
+    container_name: erp_redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  minio:
+    image: minio/minio
+    container_name: erp_minio
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+    container_name: erp_backend
+    ports:
+      - "8000:8000"
+    environment:
+      - POSTGRES_USER=erp_user
+      - POSTGRES_PASSWORD=changeme
+      - POSTGRES_DB=erp_db
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=your-256-bit-secret-here
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+      - MINIO_BUCKET_NAME=erp-files
+      - MINIO_USE_SSL=false
+      - FRONTEND_URL=http://localhost:5173
+      - CORS_ORIGINS=["http://localhost:5173"]
+    depends_on:
+      - db
+      - redis
+      - minio
+    volumes:
+      - ./Backend:/app
+    restart: unless-stopped
+
+#  celery_worker:
+#    build:
+#      context: ./Backend
+#      dockerfile: Dockerfile
+#    container_name: erp_celery_worker
+#    command: ["celery", "-A", "app.core.celery_app", "worker", "--loglevel=info"]
+#    environment:
+#      - POSTGRES_USER=erp_user
+#      - POSTGRES_PASSWORD=changeme
+#      - POSTGRES_DB=erp_db
+#      - POSTGRES_HOST=db
+#      - POSTGRES_PORT=5432
+#      - REDIS_URL=redis://redis:6379/0
+#      - SECRET_KEY=your-256-bit-secret-here
+#      - MINIO_ENDPOINT=minio:9000
+#      - MINIO_ACCESS_KEY=minioadmin
+#      - MINIO_SECRET_KEY=minioadmin
+#      - MINIO_BUCKET_NAME=erp-files
+#      - MINIO_USE_SSL=false
+#    depends_on:
+#      - db
+#      - redis
+#      - backend
+#    volumes:
+#      - ./Backend:/app
+#    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./Frontend
+      dockerfile: Dockerfile
+    container_name: erp_frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+    volumes:
+      - ./Frontend:/app
+      - /app/node_modules
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  minio_data:

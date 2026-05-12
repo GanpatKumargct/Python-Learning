@@ -68,10 +68,11 @@ async def generate_and_send_otp(db: AsyncSession, email: str, purpose: str) -> N
     db.add(db_otp)
     await db.commit()
     
-    # In a real app, this sends an email via Celery
-    print(f"=========================================")
-    print(f"DEBUG: OTP for {email} is {otp}")
-    print(f"=========================================")
+    # In a real app, this sends an email via Celery, but we use the global email module
+    from app.core.email import send_email
+    subject = "Your Verification Code"
+    body_html = f"<h3>Your one-time password is: <b>{otp}</b></h3><p>It expires in 10 minutes.</p>"
+    await send_email(email, subject, body_html)
 
 async def verify_otp(db: AsyncSession, email: str, otp: str, purpose: str) -> AuthOTP:
     result = await db.execute(

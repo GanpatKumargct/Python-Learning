@@ -89,7 +89,7 @@ export default function LoginPage() {
       
       <div className="mt-6 text-center text-sm text-gray-500">
         Applying for a role? <br/>
-        <a href="/candidate/portal" className="text-blue-400 hover:text-blue-300 transition-colors font-medium">Go to Candidate Portal</a>
+        <a href="/candidate/login" className="text-blue-400 hover:text-blue-300 transition-colors font-medium">Go to Candidate Portal</a>
       </div>
     </div>
   );

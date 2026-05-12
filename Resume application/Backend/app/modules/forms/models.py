@@ -4,6 +4,8 @@ from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.sql import func
 from app.core.database import Base
 
+from sqlalchemy.orm import relationship
+
 class Form(Base):
     __tablename__ = 'forms'
 
@@ -18,6 +20,8 @@ class Form(Base):
     created_by = Column(UUID(as_uuid=True), ForeignKey('users.id'), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    fields = relationship("FormField", back_populates="form", cascade="all, delete-orphan")
 
 class FormField(Base):
     __tablename__ = 'form_fields'
@@ -34,6 +38,8 @@ class FormField(Base):
     display_order = Column(Integer, nullable=False)
     column_type = Column(String, default='TEXT')
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    form = relationship("Form", back_populates="fields")
 
 class FormFileUpload(Base):
     __tablename__ = 'form_file_uploads'
