@@ -3,8 +3,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
-from app.modules.forms.models import Form, FormField
-from app.modules.forms import schemas
+from app.shared.forms.models import Form, FormField
+from app.shared.forms import schemas
 
 async def create_dynamic_table(db: AsyncSession, table_name: str, fields: list[schemas.FormFieldCreate]):
     """

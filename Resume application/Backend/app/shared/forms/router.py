@@ -5,8 +5,8 @@ import uuid
 
 from app.core.database import get_db
 from app.core.dependencies import get_current_user, require_roles
-from app.modules.auth.models import User
-from app.modules.forms import schemas, service
+from app.shared.auth.models import User
+from app.shared.forms import schemas, service
 
 router = APIRouter()
 

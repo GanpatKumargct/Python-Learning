@@ -11,12 +11,12 @@ from alembic import context
 from app.core.config import settings
 from app.core.database import Base
 
-import app.modules.auth.models
+import app.shared.auth.models
 import app.modules.ats.candidates.models
-import app.modules.ats.forms.models
+import app.shared.forms.models
 import app.modules.ats.requisitions.models
 import app.modules.ats.pipeline.models
-import app.modules.ats.emails.models
+import app.shared.emails.models
 import app.modules.ats.referrals.models
 
 # this is the Alembic Config object, which provides

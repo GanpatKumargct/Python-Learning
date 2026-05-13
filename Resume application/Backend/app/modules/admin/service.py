@@ -2,7 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from fastapi import HTTPException, status
 import uuid
-from app.modules.auth.models import User, UserRole
+from app.shared.auth.models import User, UserRole
 from app.modules.admin import schemas
 from app.core.security import hash_password
 

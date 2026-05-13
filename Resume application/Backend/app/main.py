@@ -2,13 +2,14 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 
-from app.modules.auth.router import router as auth_router
+from app.shared.auth.router import router as auth_router
 from app.modules.admin.router import router as admin_router
-from app.modules.forms.router import router as forms_router
+from app.shared.forms.router import router as forms_router
 from app.modules.ats.requisitions.router import router as req_router
-# from app.modules.ats.pipeline.router import router as pipeline_router
 # from app.modules.ats.candidates.router import router as candidate_router
-# from app.modules.ats.emails.router import router as email_router
+# from app.modules.ats.referrals.router import router as referral_router
+# from app.shared.emails.router import router as email_router
+# from app.modules.ats.pipeline.router import router as pipeline_router
 
 app = FastAPI(title="ERP – ATS API", version="1.0.0")
 

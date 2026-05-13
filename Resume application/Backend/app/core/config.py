@@ -28,6 +28,7 @@ class Settings(BaseSettings):
 
     ZOHO_CLIENT_ID: str = ""
     ZOHO_CLIENT_SECRET: str = ""
+    ZOHO_REDIRECT_URI: str = "http://localhost:8000/auth/zoho/callback"
     ZOHO_PEOPLE_API_BASE: str = ""
     ZOHO_BOOKINGS_API_BASE: str = ""
 

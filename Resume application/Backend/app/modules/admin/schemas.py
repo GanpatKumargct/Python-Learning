@@ -2,7 +2,7 @@ from pydantic import BaseModel, EmailStr
 from typing import Optional
 from uuid import UUID
 from datetime import datetime
-from app.modules.auth.models import UserRole
+from app.shared.auth.models import UserRole
 
 class UserCreate(BaseModel):
     email: EmailStr

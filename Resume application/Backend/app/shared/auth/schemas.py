@@ -27,15 +27,15 @@ class UserOut(BaseModel):
 class RefreshTokenRequest(BaseModel):
     refresh_token: str
 
-class SendOTPRequest(BaseModel):
+class SendMagicLinkRequest(BaseModel):
     email: EmailStr
-    purpose: str
+    purpose: str = "magic_link"
 
-class VerifyOTPRequest(BaseModel):
+class VerifyMagicLinkRequest(BaseModel):
     email: EmailStr
-    otp: str
-    purpose: str
+    token: str
+    purpose: str = "magic_link"
 
-class CandidateOTPVerifyResponse(BaseModel):
+class CandidateMagicLinkVerifyResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
