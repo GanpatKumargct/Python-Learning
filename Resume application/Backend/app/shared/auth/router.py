@@ -42,12 +42,15 @@ async def zoho_login():
     )
     return RedirectResponse(zoho_auth_url)
 
-@router.get("/zoho/callback", response_model=schemas.TokenResponse)
+@router.get("/zoho/callback")
 async def zoho_callback(
     code: str,
     db: AsyncSession = Depends(get_db)
 ):
-    return await service.handle_zoho_callback(db, code)
+    tokens = await service.handle_zoho_callback(db, code)
+    # Redirect to frontend with token
+    redirect_url = f"{settings.FRONTEND_URL}/login/success?token={tokens['access_token']}"
+    return RedirectResponse(redirect_url)
 
 @router.post("/candidate/send-magic-link", status_code=status.HTTP_200_OK)
 async def send_candidate_magic_link(

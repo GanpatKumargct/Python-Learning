@@ -313,3 +313,103 @@ Everything is now decoupled! The ats folder is fully dedicated to ATS-specific w
 Are you ready to proceed with Phase 2: Implementing the Candidate Magic Link (OTP) Auth, or would you like to review the changes in the codebase first?
 
 ------------------------------------
+
+in admins like admin and ptc how they can add the hiring manager, supporting member and other internal user? clearify it. 
+
+and go ahead with phase4
+1. How Admins/PTC add Internal Users (Hiring Managers, etc.)
+Even with Zoho SSO, we need to know what Role a user has inside our ERP, and we must explicitly authorize them to access it.
+
+Here is the exact flow:
+
+The Admin Action: The Admin or PTC member goes to the ERP User Management Dashboard (powered by the POST /api/v1/admin/users endpoint we have in app/modules/admin/router.py).
+Adding the User: They add the new employee's email, full_name, and assign them a role (like hiring_manager, supporting_member, project_director).
+The Login Experience: When that new employee visits the ERP, they click "Login with Zoho".
+The Security Check: Zoho authenticates them and sends them back to our backend. Our backend looks at their email and checks the users table.
+If the Admin added them: The backend sees their role (e.g., Hiring Manager), generates their session token, and logs them in!
+If the Admin did NOT add them: The backend rejects them with a 403 Forbidden error, even if they have a valid company Zoho account. This ensures nobody gets access unless explicitly invited by an Admin.
+2. Phase 4: ATS Cleanup Complete! 🧹
+I have reviewed and cleaned up the ats module to ensure it strictly relies on the new shared infrastructure.
+
+What was done:
+
+Removed Broken Links: I cleaned up main.py which was attempting to load ATS routers that hadn't been fully fleshed out yet (like candidate_router and referral_router), preventing the server from crashing on startup.
+Verified Isolation: I audited the requisitions module (and candidates/referrals models) to confirm they are no longer importing core logic from other business modules. They strictly rely on app.shared.auth and app.core where needed.
+Domain-Driven Integrity: The ATS is now a fully isolated Domain. If you were to copy the ats folder into another project that has the shared folder, it would work perfectly.
+What's Next?
+The underlying foundation is now completely enterprise-grade! Since the backend structure is solid, we can move forward with implementing specific ATS features like the Requisitions Approval Workflow, the full Dynamic Form builder, or the Frontend UI connections.
+
+What would you like to tackle next?
+
+frontend ui for auth and whats built it. ? then reuistion work approval flow are defined by the admin.
+ 
+------------------------------------------------------------------------
+this approval workflow have to design and decide by the admin like list of module will be appread in  a UI for example the admin UI while they starting to create the workflow then the first drown down option will be there and they asked like whcih module you want to create suppose they choose ats now the another things what you want to create like hiring procees or offerlatter approval, if they select for hiring process then they can go and define the stages 
+
+same go for other module as well so we don't have to hardcoded based on the ATS only will give flexibility to the admin they can create it. above mentoined things are just a example  did you got it or you need some other clearification.  >>>>>>>>>>>>>>>
+ 
+I understood you perfectly! You are describing a Polymorphic, Module-Agnostic Workflow Engine.
+
+By designing it this way, the workflow_engine won't know (or care) if it's approving an ATS Requisition, a Finance Purchase Order, or a CRM Discount. It simply manages stages, roles, and status tracking based on the rules the Admin set up in the UI.
+
+I have drafted the exact Database Schema and logic architecture for this engine. You can review it here: 
+workflow_engine_design.md
+
+Quick Summary of the Engine:
+Templates (WorkflowTemplate, WorkflowTemplateStep): This is what the Admin creates. They select module="ats" and process="requisition". They define Step 1 as "Hiring Manager" and Step 2 as "Project Director".
+Execution (WorkflowInstance, WorkflowActionLog): When an employee creates a requisition, the ATS module tells the Workflow Engine: "Hey, start a workflow for module='ats', process='requisition', and here is the entity_id."
+The Engine takes over, locking the status, notifying the necessary roles, and handling the "Approve/Reject" clicks securely without hardcoding any ATS logic.
+Does this design align with your vision? If so, I will start building the backend models and API endpoints for it in the app/shared/workflow_engine directory!
+
+dreaft plan : Generic ERP Workflow Engine Design
+You explained it perfectly. We are building a truly module-agnostic Workflow Engine where the Admin defines the rules via the UI, and any module (ATS, CRM, Finance) can consume it.
+
+Here is how we will architect the database models inside app/shared/workflow_engine to achieve this flexibility:
+
+1. The Configuration Models (Defined by Admin)
+These tables store the rules that the Admin sets up in the UI.
+
+WorkflowTemplate
+id: UUID
+name: String (e.g., "Standard Job Requisition Approval")
+module_name: String (e.g., "ats", "finance", "inventory")
+process_name: String (e.g., "requisition", "offer_letter", "purchase_order")
+is_active: Boolean
+WorkflowTemplateStep
+Defines the sequential stages for a template.
+
+id: UUID
+template_id: UUID (Foreign Key)
+step_order: Integer (1, 2, 3...)
+name: String (e.g., "Director Approval")
+required_role: String (e.g., "project_director", "admin") — Who is allowed to approve this step?
+action_type: String (e.g., "approve_reject", "acknowledge")
+2. The Execution Models (Created during runtime)
+When a user actually submits a Requisition (or Offer Letter), the backend looks up the active WorkflowTemplate for module="ats" and process="requisition". It then creates an "Instance" to track the progress.
+
+WorkflowInstance
+Tracks the live progress of a specific item.
+
+id: UUID
+template_id: UUID (Foreign Key)
+entity_id: UUID — (This is the magic part. It stores the ID of the Requisition, Offer Letter, etc., without needing a hardcoded foreign key to the ATS tables).
+module_name: String ("ats")
+process_name: String ("requisition")
+status: Enum ("in_progress", "completed", "rejected")
+current_step_order: Integer (Tracks which step we are currently waiting on)
+WorkflowActionLog
+Tracks the history and current pending approvals.
+
+id: UUID
+instance_id: UUID
+step_order: Integer
+status: Enum ("pending", "approved", "rejected")
+acted_by_user_id: UUID (Who actually clicked the approve button)
+comments: String (e.g., "Budget looks good, approved.")
+acted_at: DateTime
+How the Flow Works in Practice
+Admin Setup: Admin goes to the UI, selects Module: ATS, Process: Requisition. They add Step 1 (Role: Hiring Manager), Step 2 (Role: Project Director).
+Trigger: An employee creates a Requisition. The ATS module calls workflow_engine.start_workflow(module="ats", process="requisition", entity_id=req.id).
+Routing: The Engine creates an Instance, sets current_step_order = 1. It looks at the Template to see that Step 1 requires a Hiring Manager. It can then trigger an email notification to users with that role.
+Approval: A Hiring Manager logs in, sees a pending task. They click "Approve". The Engine logs the action, increments current_step_order to 2, and notifies the Project Director.
+If this design accurately captures your vision for the dynamic Admin-defined workflow, let me know, and I will begin writing the backend models and services for app/shared/workflow_engine!

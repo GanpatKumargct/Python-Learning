@@ -3,6 +3,8 @@ import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-route
 import AuthLayout from './modules/shared/layouts/AuthLayout';
 import LoginPage from './modules/shared/pages/LoginPage';
 import CandidateOTPPage from './modules/shared/pages/CandidateOTPPage';
+import ZohoCallbackPage from './modules/shared/pages/ZohoCallbackPage';
+import VerifyMagicLinkPage from './modules/shared/pages/VerifyMagicLinkPage';
 import FormBuilderPage from './modules/forms/pages/FormBuilderPage';
 import JobRequisitionsPage from './modules/ats/pages/JobRequisitionsPage';
 import UserManagementPage from './modules/admin/pages/UserManagementPage';
@@ -79,6 +81,10 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/candidate/login" element={<CandidateOTPPage />} />
         </Route>
+        
+        {/* Auth Callbacks (No Layout) */}
+        <Route path="/login/success" element={<ZohoCallbackPage />} />
+        <Route path="/verify" element={<VerifyMagicLinkPage />} />
         
         {/* Protected Dashboard Routes nested */}
         <Route path="/app/*" element={<RequireAuth><Dashboard /></RequireAuth>} />
