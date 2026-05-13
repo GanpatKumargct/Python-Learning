@@ -3,10 +3,6 @@ from typing import Optional
 from uuid import UUID
 from datetime import datetime
 
-class LoginRequest(BaseModel):
-    email: EmailStr
-    password: str
-
 class TokenResponse(BaseModel):
     access_token: str
     refresh_token: str
@@ -27,15 +23,15 @@ class UserOut(BaseModel):
 class RefreshTokenRequest(BaseModel):
     refresh_token: str
 
-class SendMagicLinkRequest(BaseModel):
+class SendOTPRequest(BaseModel):
     email: EmailStr
-    purpose: str = "magic_link"
+    purpose: str = "otp"
 
-class VerifyMagicLinkRequest(BaseModel):
+class VerifyOTPRequest(BaseModel):
     email: EmailStr
-    token: str
-    purpose: str = "magic_link"
+    otp: str
+    purpose: str = "otp"
 
-class CandidateMagicLinkVerifyResponse(BaseModel):
+class CandidateOTPVerifyResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"

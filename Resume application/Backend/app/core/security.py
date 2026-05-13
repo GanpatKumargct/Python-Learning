@@ -1,19 +1,10 @@
 from jose import jwt, JWTError
-import bcrypt
+
 from datetime import datetime, timedelta, timezone
 from app.core.config import settings
 from typing import Optional
 
-def hash_password(password: str) -> str:
-    salt = bcrypt.gensalt()
-    pwd_bytes = password.encode('utf-8')
-    return bcrypt.hashpw(pwd_bytes, salt).decode('utf-8')
 
-def verify_password(plain: str, hashed: str) -> bool:
-    try:
-        return bcrypt.checkpw(plain.encode('utf-8'), hashed.encode('utf-8'))
-    except Exception:
-        return False
 
 def create_access_token(user_id: str, role: str) -> str:
     expire = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)

@@ -11,7 +11,6 @@ export default function UserManagementPage() {
   const [fullName, setFullName] = useState('');
   const [role, setRole] = useState('ptc');
   const [department, setDepartment] = useState('');
-  const [password, setPassword] = useState('');
   const [creating, setCreating] = useState(false);
 
   useEffect(() => {
@@ -38,11 +37,10 @@ export default function UserManagementPage() {
         email,
         full_name: fullName,
         role,
-        department,
-        password
+        department
       });
       setShowModal(false);
-      setEmail(''); setFullName(''); setRole('ptc'); setDepartment(''); setPassword('');
+      setEmail(''); setFullName(''); setRole(''); setDepartment('');
       fetchUsers();
     } catch (err) {
       alert(err.response?.data?.detail || 'Failed to create user');
@@ -146,20 +144,13 @@ export default function UserManagementPage() {
               <div className="grid grid-cols-2 gap-5">
                 <div className="space-y-1.5">
                   <label className="text-sm font-medium text-gray-400">System Role</label>
-                  <select 
+                  <input 
                     required 
                     value={role} 
                     onChange={e => setRole(e.target.value)}
-                    className="w-full bg-black/50 border border-gray-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 appearance-none"
-                  >
-                    <option value="admin">Admin</option>
-                    <option value="hr">HR</option>
-                    <option value="director">Director</option>
-                    <option value="founder">Founder</option>
-                    <option value="chief_of_staff">Chief of Staff</option>
-                    <option value="hiring_manager">Hiring Manager</option>
-                    <option value="ptc">PTC</option>
-                  </select>
+                    className="w-full bg-black/50 border border-gray-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+                    placeholder="e.g. Hiring Manager"
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-sm font-medium text-gray-400">Department</label>
@@ -167,11 +158,7 @@ export default function UserManagementPage() {
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium text-gray-400">Temporary Password</label>
-                <input type="password" required value={password} onChange={e => setPassword(e.target.value)} className="w-full bg-black/50 border border-gray-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500" placeholder="••••••••" />
-                <p className="text-xs text-gray-500 mt-1">The employee will use this to log in.</p>
-              </div>
+
 
               <div className="flex gap-4 pt-4 border-t border-gray-800">
                 <button type="button" onClick={() => setShowModal(false)} className="flex-1 bg-gray-800 hover:bg-gray-700 text-white font-medium py-3 rounded-xl transition-all">Cancel</button>

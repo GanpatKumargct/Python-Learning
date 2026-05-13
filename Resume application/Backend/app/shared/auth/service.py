@@ -6,7 +6,7 @@ from sqlalchemy.future import select
 from fastapi import HTTPException, status
 import httpx
 from app.core.config import settings
-from app.core.security import verify_password, create_access_token, create_refresh_token, decode_refresh_token, hash_password
+from app.core.security import create_access_token, create_refresh_token, decode_refresh_token
 from app.shared.auth.models import User, RefreshToken, AuthOTP
 from app.modules.ats.candidates.models import Candidate
 
@@ -17,14 +17,6 @@ async def get_user_by_email(db: AsyncSession, email: str) -> User | None:
 async def get_user_by_id(db: AsyncSession, user_id: str) -> User | None:
     result = await db.execute(select(User).where(User.id == user_id))
     return result.scalar_one_or_none()
-
-async def authenticate_user(db: AsyncSession, email: str, password: str) -> User | None:
-    user = await get_user_by_email(db, email)
-    if not user or not user.password_hash:
-        return None
-    if not verify_password(password, user.password_hash):
-        return None
-    return user
 
 async def create_tokens_for_user(db: AsyncSession, user: User) -> dict:
     access_token = create_access_token(user_id=str(user.id), role=user.role.value if hasattr(user.role, 'value') else user.role)
@@ -106,9 +98,10 @@ async def handle_zoho_callback(db: AsyncSession, code: str) -> dict:
         
     return await create_tokens_for_user(db, user)
 
-async def generate_and_send_magic_link(db: AsyncSession, email: str, purpose: str = "magic_link") -> None:
-    token = secrets.token_urlsafe(32)
-    token_hash = hash_password(token)
+async def generate_and_send_otp(db: AsyncSession, email: str, purpose: str = "otp") -> None:
+    # Generate a 6-digit OTP
+    otp = str(secrets.randbelow(1000000)).zfill(6)
+    token_hash = hashlib.sha256(otp.encode('utf-8')).hexdigest()
     
     db_otp = AuthOTP(
         email=email,
@@ -121,22 +114,16 @@ async def generate_and_send_magic_link(db: AsyncSession, email: str, purpose: st
     
     # In a real app, this sends an email via Celery, but we use the global email module
     from app.core.email import send_email
-    subject = "Login to Your Account"
+    subject = "Your Login OTP Code"
     
-    # Using a standard localhost frontend URL for dev. In prod, this should come from settings.
-    frontend_url = "http://localhost:5173"
-    magic_link = f"{frontend_url}/verify?token={token}&email={email}"
-    
-    body_html = f\"\"\"
-    <h3>Login to Your Account</h3>
-    <p>Click the secure link below to log in. This link will expire in 15 minutes.</p>
-    <a href="{magic_link}" style="display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;">Login Now</a>
-    <p>If the button doesn't work, copy and paste this URL into your browser:</p>
-    <p><a href="{magic_link}">{magic_link}</a></p>
-    \"\"\"
+    body_html = f"""
+    <h3>Your Login OTP</h3>
+    <p>Please use the following 6-digit code to log in. This code will expire in 15 minutes.</p>
+    <h2 style="padding: 10px 20px; background-color: #f4f4f4; border-radius: 5px; display: inline-block;">{otp}</h2>
+    """
     await send_email(email, subject, body_html)
 
-async def verify_magic_link(db: AsyncSession, email: str, token: str, purpose: str = "magic_link") -> AuthOTP:
+async def verify_otp(db: AsyncSession, email: str, otp: str, purpose: str = "otp") -> AuthOTP:
     result = await db.execute(
         select(AuthOTP)
         .where(AuthOTP.email == email, AuthOTP.purpose == purpose, AuthOTP.used_at == None)
@@ -145,21 +132,21 @@ async def verify_magic_link(db: AsyncSession, email: str, token: str, purpose: s
     db_otp = result.scalars().first()
     
     if not db_otp:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired magic link")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired OTP")
     
     if db_otp.expires_at.replace(tzinfo=timezone.utc) < datetime.now(timezone.utc):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Magic link expired")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="OTP expired")
         
-    if not verify_password(token, db_otp.otp_hash):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid magic link")
+    if hashlib.sha256(otp.encode('utf-8')).hexdigest() != db_otp.otp_hash:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid OTP")
         
     db_otp.used_at = datetime.now(timezone.utc)
     await db.commit()
     
     return db_otp
 
-async def verify_candidate_magic_link(db: AsyncSession, email: str, token: str) -> dict:
-    await verify_magic_link(db, email, token, purpose="magic_link")
+async def verify_candidate_otp(db: AsyncSession, email: str, otp: str) -> dict:
+    await verify_otp(db, email, otp, purpose="otp")
     
     result = await db.execute(select(Candidate).where(Candidate.email == email))
     candidate = result.scalar_one_or_none()

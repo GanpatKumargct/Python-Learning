@@ -2,9 +2,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from fastapi import HTTPException, status
 import uuid
-from app.shared.auth.models import User, UserRole
+from app.shared.auth.models import User
+from app.shared.emails.models import EmailTemplate
 from app.modules.admin import schemas
-from app.core.security import hash_password
 
 async def get_all_users(db: AsyncSession) -> list[User]:
     # Candidates are in a separate table, so no need to filter them out here
@@ -17,14 +17,11 @@ async def create_user(db: AsyncSession, user_data: schemas.UserCreate) -> User:
     if result.scalar_one_or_none():
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
         
-    hashed_pwd = hash_password(user_data.password)
-    
     db_user = User(
         email=user_data.email,
         full_name=user_data.full_name,
         role=user_data.role,
         department=user_data.department,
-        password_hash=hashed_pwd,
         is_active=True
     )
     db.add(db_user)
@@ -49,3 +46,37 @@ async def update_user(db: AsyncSession, user_id: uuid.UUID, user_data: schemas.U
     await db.commit()
     await db.refresh(user)
     return user
+
+async def delete_user(db: AsyncSession, user_id: uuid.UUID) -> bool:
+    user = await db.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    await db.delete(user)
+    await db.commit()
+    return True
+
+async def get_all_email_templates(db: AsyncSession) -> list[EmailTemplate]:
+    result = await db.execute(select(EmailTemplate).order_by(EmailTemplate.name))
+    return result.scalars().all()
+
+async def save_email_template(db: AsyncSession, template_data: schemas.EmailTemplateCreate) -> EmailTemplate:
+    result = await db.execute(select(EmailTemplate).where(EmailTemplate.name == template_data.name))
+    template = result.scalar_one_or_none()
+    
+    if template:
+        template.subject = template_data.subject
+        template.body_html = template_data.body_html
+        template.is_active = template_data.is_active
+    else:
+        template = EmailTemplate(
+            name=template_data.name,
+            subject=template_data.subject,
+            body_html=template_data.body_html,
+            is_active=template_data.is_active
+        )
+        db.add(template)
+        
+    await db.commit()
+    await db.refresh(template)
+    return template

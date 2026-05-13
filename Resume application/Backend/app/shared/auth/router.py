@@ -7,19 +7,7 @@ from app.shared.auth import schemas, service
 
 router = APIRouter()
 
-@router.post("/login", response_model=schemas.TokenResponse)
-async def login(
-    payload: schemas.LoginRequest, 
-    db: AsyncSession = Depends(get_db)
-):
-    user = await service.authenticate_user(db, payload.email, payload.password)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
-        )
-    return await service.create_tokens_for_user(db, user)
-
+# Refresh access token using refresh token (Any user with valid refresh token)
 @router.post("/refresh", response_model=schemas.TokenResponse)
 async def refresh_token(
     payload: schemas.RefreshTokenRequest,
@@ -27,6 +15,7 @@ async def refresh_token(
 ):
     return await service.refresh_access_token(db, payload.refresh_token)
 
+# Redirect to Zoho SSO login (Public)
 @router.get("/zoho/login")
 async def zoho_login():
     if not settings.ZOHO_CLIENT_ID:
@@ -42,6 +31,7 @@ async def zoho_login():
     )
     return RedirectResponse(zoho_auth_url)
 
+# Handle callback from Zoho SSO and generate token (Public)
 @router.get("/zoho/callback")
 async def zoho_callback(
     code: str,
@@ -52,17 +42,19 @@ async def zoho_callback(
     redirect_url = f"{settings.FRONTEND_URL}/login/success?token={tokens['access_token']}"
     return RedirectResponse(redirect_url)
 
-@router.post("/candidate/send-magic-link", status_code=status.HTTP_200_OK)
-async def send_candidate_magic_link(
-    payload: schemas.SendMagicLinkRequest,
+# Send OTP to candidate's email for passwordless login (Public)
+@router.post("/candidate/send-otp", status_code=status.HTTP_200_OK)
+async def send_candidate_otp(
+    payload: schemas.SendOTPRequest,
     db: AsyncSession = Depends(get_db)
 ):
-    await service.generate_and_send_magic_link(db, payload.email, payload.purpose)
-    return {"message": "Magic link sent successfully"}
+    await service.generate_and_send_otp(db, payload.email, payload.purpose)
+    return {"message": "OTP sent successfully"}
 
-@router.post("/candidate/verify-magic-link", response_model=schemas.CandidateMagicLinkVerifyResponse)
-async def verify_candidate_magic_link(
-    payload: schemas.VerifyMagicLinkRequest,
+# Verify candidate's OTP and generate access token (Public)
+@router.post("/candidate/verify-otp", response_model=schemas.CandidateOTPVerifyResponse)
+async def verify_candidate_otp(
+    payload: schemas.VerifyOTPRequest,
     db: AsyncSession = Depends(get_db)
 ):
-    return await service.verify_candidate_magic_link(db, payload.email, payload.token)
+    return await service.verify_candidate_otp(db, payload.email, payload.otp)

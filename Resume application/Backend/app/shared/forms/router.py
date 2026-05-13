@@ -10,6 +10,7 @@ from app.shared.forms import schemas, service
 
 router = APIRouter()
 
+# Create a new dynamic form (Admin, Hiring Manager)
 @router.post("/", response_model=schemas.FormOut, status_code=status.HTTP_201_CREATED)
 async def create_new_form(
     payload: schemas.FormCreate,
@@ -24,6 +25,7 @@ async def create_new_form(
             detail=f"Failed to create form and table: {str(e)}"
         )
 
+# List all forms (Any authenticated user)
 @router.get("/", response_model=List[schemas.FormOut])
 async def list_forms(
     db: AsyncSession = Depends(get_db),
@@ -31,6 +33,7 @@ async def list_forms(
 ):
     return await service.get_forms(db)
 
+# Get a specific form by ID (Any authenticated user)
 @router.get("/{form_id}", response_model=schemas.FormOut)
 async def get_form(
     form_id: uuid.UUID,

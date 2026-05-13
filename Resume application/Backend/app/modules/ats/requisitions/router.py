@@ -10,6 +10,7 @@ from app.modules.ats.requisitions import schemas, service
 
 router = APIRouter()
 
+# Create a new job requisition (Admin, Hiring Manager)
 @router.post("/", response_model=schemas.RequisitionOut, status_code=status.HTTP_201_CREATED)
 async def create_requisition(
     payload: schemas.RequisitionCreate,
@@ -18,6 +19,7 @@ async def create_requisition(
 ):
     return await service.create_requisition(db, payload, current_user.id)
 
+# List all requisitions (Any authenticated user)
 @router.get("/", response_model=List[schemas.RequisitionOut])
 async def list_requisitions(
     db: AsyncSession = Depends(get_db),
@@ -25,6 +27,7 @@ async def list_requisitions(
 ):
     return await service.get_requisitions(db)
 
+# Submit a requisition for approval (Any authenticated user)
 @router.post("/{req_id}/submit", response_model=schemas.RequisitionOut)
 async def submit_requisition(
     req_id: uuid.UUID,

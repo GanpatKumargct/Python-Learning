@@ -5,23 +5,13 @@ from sqlalchemy.sql import func
 from app.core.database import Base
 import enum
 
-class UserRole(str, enum.Enum):
-    admin = 'admin'
-    ptc = 'ptc'
-    founder = 'founder'
-    project_director = 'project_director'
-    chief_of_staff = 'chief_of_staff'
-    hiring_manager = 'hiring_manager'
-    supporting_member = 'supporting_member'
-
 class User(Base):
     __tablename__ = 'users'
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     email = Column(String, unique=True, nullable=False)
     full_name = Column(String, nullable=False)
-    password_hash = Column(String, nullable=True)
-    role = Column(SQLEnum(UserRole, name='user_role'), nullable=False)
+    role = Column(String, nullable=False)
     department = Column(String, nullable=True)
     is_active = Column(Boolean, default=True)
     created_by = Column(UUID(as_uuid=True), ForeignKey('users.id'), nullable=True)

@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     SMTP_PORT: int = 587
     SMTP_USER: str
     SMTP_PASSWORD: str
+    OTP_EMAIL_SENDER: str = "noreply@company.com"
     EMAIL_FROM_NAME: str = "Aerospace Recruitment"
 
     ZOHO_CLIENT_ID: str = ""

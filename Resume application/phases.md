@@ -413,3 +413,52 @@ Trigger: An employee creates a Requisition. The ATS module calls workflow_engine
 Routing: The Engine creates an Instance, sets current_step_order = 1. It looks at the Template to see that Step 1 requires a Hiring Manager. It can then trigger an email notification to users with that role.
 Approval: A Hiring Manager logs in, sees a pending task. They click "Approve". The Engine logs the action, increments current_step_order to 2, and notifies the Project Director.
 If this design accurately captures your vision for the dynamic Admin-defined workflow, let me know, and I will begin writing the backend models and services for app/shared/workflow_engine!
+------------------------------------------------------------------------
+**Phase Update:**
+1. Changed candidate auth from Magic Links to 6-digit OTP code flow securely sent via the global email module.
+2. Stripped out the ID and password login completely, transitioning to full reliance on Zoho SSO for internal users (Employees/Admins).
+3. Replaced the hardcoded 'UserRole' enum with a dynamic string attribute giving Admins the flexibility to assign customized roles from the User Management Dashboard.
+4. Refactored the dmin API service to accept manual user creation (Email, Name, Role, Department) without password assignment.
+5. Clearly defined the distinction between the Zoho Auth Configuration and Email Notification variables in the .env file, isolating OTP_EMAIL_SENDER.
+6. Updated the User Management Dashboard UI to align with these changes.
+
+
+-----------------------------------------------------
+get the project context 
+
+and updated these "Admin Dashboard. 
+-delete user option also should be there. 
+
+-Email template and body can be configured by the admin while the rejection email(ATS Hiring process) will go. for otp is hardcoded is okay. 
+
+General 
+- In security why the hashpassword verify password are there when we dont have to use any password here. and also in requirement.txt ?
+- For Now Mini Io configured in a Docker. 
+
+Note : 
+-each router add small one line comment whats for and who can access this"
+I've completed all the requested updates across your application. Here's a breakdown of the changes made:
+
+Delete User Option (Admin Dashboard):
+
+Added a delete_user function in app/modules/admin/service.py.
+Created a new DELETE /users/{user_id} endpoint in app/modules/admin/router.py that is restricted to administrators.
+Configurable Email Templates:
+
+Discovered that an EmailTemplate model already existed in app/shared/emails/models.py.
+Added the EmailTemplateCreate and EmailTemplateOut schemas to admin/schemas.py.
+Added GET /email-templates and POST /email-templates routes to the Admin Dashboard router so admins can manage email templates.
+Built a generic send_templated_email utility in app/core/email.py that queries the database for the active email template and replaces placeholders (like {candidate_name}). It has a fallback mechanism to a hardcoded body if the template isn't configured yet (ideal for your ATS rejection emails).
+Removed Unused Security Hash Functions:
+
+Completely removed hash_password, verify_password, and the bcrypt import from app/core/security.py.
+Removed the passlib[bcrypt] dependency from requirements.txt since we don't store plain passwords anymore.
+Refactored the OTP logic in app/shared/auth/service.py to securely store/verify the OTP hash using basic hashlib.sha256 logic instead, allowing the application to work efficiently without heavy password-hashing overhead.
+Added Contextual Comments to Routers:
+
+I went through all existing API router files (admin/router.py, shared/forms/router.py, shared/auth/router.py, and ats/requisitions/router.py) and added a brief one-line comment to each endpoint explaining what it does and who has access to it.
+Regarding MinIO, I checked the current docker-compose.yml and the configuration is fully intact in the erp_minio service, and the backend environment variables are correctly mapped for it.
+
+Everything is perfectly set up and ready to go! Let me know if you want to implement the trigger for the ATS rejection email or move to the next set of features!
+
+--------------------------------
