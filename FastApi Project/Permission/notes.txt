@@ -1,0 +1,36 @@
+{
+  "entity_name": "candidate",
+  "actor_id": "123e4567-e89b-12d3-a456-426614174000",
+  "role": "hiring_manager",
+  "fields": [
+    "full_name", 
+    "email", 
+    "salary", 
+    "internal_notes"
+  ]
+}
+
+1. entity_name: "candidate"
+An entity is the core business object or "module record" the user is trying to look at. You can think of it as the name of a database table or a major screen in your app.
+
+Examples: "candidate", "job_posting", "employee_profile", "invoice".
+Why we need it: The engine needs to know what thing the user is trying to access so it can look up the correct permissions.
+2. actor_id: "123e4567-e89b-12d3-a456-426614174000"
+The actor is the person (the user) who is currently logged in and looking at their screen. This is usually their unique User ID from your database.
+
+Why we need it: We might need this to check if this exact person is the "owner" or "assignee" of the record (Row-Level Security).
+3. role: "hiring_manager"
+This is the job function or permission group assigned to that user.
+
+Examples: "hiring_manager", "recruiter", "system_admin", "interviewer".
+Why we need it: The RBAC engine looks at this role and says, "Okay, what rules do I have saved in the database for a Hiring Manager?"
+4. fields: ["full_name", "email", "salary", "internal_notes"]
+These are the specific data points (or input boxes) the frontend wants to draw on the screen.
+
+Why we need it: Not everyone should see every field. The Form Engine sends this list of fields to the RBAC engine, and the RBAC engine replies with instructions for each one.
+The Engine's Reply: It might reply saying:
+"full_name" -> The Hiring Manager can Read and Edit this.
+"salary" -> The Hiring Manager can Read it, but cannot Edit it.
+"internal_notes" -> Hide this completely. The Hiring Manager isn't allowed to see it.
+
+-------------------------------------

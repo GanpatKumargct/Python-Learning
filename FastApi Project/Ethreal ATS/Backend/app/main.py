@@ -2,12 +2,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.Database.database import engine
 from app.Model import models
-from app.Routers import jobs, applications
+from app.Routers import entity, workflow, form, page
 
 # Create database tables
 models.Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="Mini-ATS API")
+app = FastAPI(title="Aerospace ERP API")
 
 # Configure CORS
 app.add_middleware(
@@ -19,9 +19,11 @@ app.add_middleware(
 )
 
 # Include Routers
-app.include_router(jobs.router)
-app.include_router(applications.router)
+app.include_router(entity.router)
+app.include_router(workflow.router)
+app.include_router(form.router)
+app.include_router(page.router)
 
 @app.get("/")
 def root():
-    return {"message": "Welcome to Mini-ATS API. Access /docs for Swagger UI"}
+    return {"message": "Welcome to Aerospace ERP API. Access /docs for Swagger UI"}

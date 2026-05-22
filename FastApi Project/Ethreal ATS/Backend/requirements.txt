@@ -2,5 +2,9 @@ fastapi
 uvicorn
 sqlalchemy
 pydantic
-
 python-dotenv
+PyJWT
+psycopg2-binary
+celery
+redis
+minio

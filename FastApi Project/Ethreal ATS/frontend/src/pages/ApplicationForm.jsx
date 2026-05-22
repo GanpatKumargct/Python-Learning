@@ -23,41 +23,32 @@ const ApplicationForm = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Simulate API call
-    setTimeout(() => {
-      setSubmitted(true);
-    }, 800);
+    try {
+      const response = await fetch('http://localhost:8000/entity/candidate/records', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          data: {
+            ...formData,
+            jobId: jobId,
+            status: 'applied'
+          }
+        }),
+      });
+      if (response.ok) {
+        setSubmitted(true);
+      } else {
+        alert("Something went wrong on the server.");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("Could not connect to the backend.");
+    }
   };
-
-//   const handleSubmit = (e) => {
-//   e.preventDefault(); // 1. Stop the page from refreshing
-
-//   // 2. Call the backend API
-//   // Replace 'http://localhost:5000/api/apply' with your actual backend link
-//   fetch('http://localhost:5000/api/apply', {
-//     method: 'POST', // We use POST because we are SENDING data
-//     headers: {
-//       'Content-Type': 'application/json', // Tell the backend we are sending JSON
-//     },
-//     body: JSON.stringify(formData), // Turn your form data into a string for the server
-//   })
-//     .then((response) => {
-//       if (response.ok) {
-//         // 3. If the backend says "OK", then show the success message
-//         setSubmitted(true);
-//       } else {
-//         // Handle cases where the server is broken or data is wrong
-//         alert("Something went wrong on the server.");
-//       }
-//     })
-//     .catch((error) => {
-//       // Handle cases where the internet is down or server is offline
-//       console.error("Error:", error);
-//       alert("Could not connect to the backend.");
-//     });
-// };
 
 
   if (submitted) {
