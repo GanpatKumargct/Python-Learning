@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Optional
 from pydantic.types import conint
 
+
 class userResponse(BaseModel):
     id : int
     email: EmailStr
@@ -17,6 +18,7 @@ class PostBase(BaseModel):
     published: bool = True
 
 
+
 class PostCreate(PostBase):
     pass
 
@@ -27,6 +29,12 @@ class ResponseModel(PostBase):
     id:int
     created_at:datetime
     owner:userResponse
+    class Config:
+        orm_mode = True
+
+class PostOut(BaseModel):
+    Post:ResponseModel
+    votes:int
     class Config:
         orm_mode = True
 

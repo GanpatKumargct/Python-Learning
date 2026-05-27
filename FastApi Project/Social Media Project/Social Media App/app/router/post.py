@@ -3,6 +3,7 @@ from .. import model, schema, Oauth2
 
 from ..database import  get_db
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from typing import List
 
 
@@ -22,16 +23,24 @@ def create_Post(post:schema.PostCreate, db :Session = Depends(get_db) , current_
             # "data":post} 
     return new_post
 
-@router.get("/", response_model=List[schema.ResponseModel])
+# @router.get("/", response_model=List[schema.ResponseModel])
+@router.get("/", response_model=List[schema.PostOut])
 def get_posts(db :Session = Depends(get_db), current_user :int=Depends(Oauth2.get_current_user),
                lim:int =10, skip :int=0, search:str=""):
 
     # this will return all the post doesn't matter which user is created(all post public)
-    all_posts= db.query(model.Post).filter(model.Post.title.contains
-                                           (search)).limit(lim).offset(skip).all()
+    # all_posts= db.query(model.Post).filter(model.Post.title.contains(search)).limit(lim).offset(skip).all()
+   
+
+    #Query with vote join 
+    all_posts_vote = db.query(model.Post,func.count(model.Vote.post_id).label("votes")
+    ).join(model.Vote, model.Vote.post_id == model.Post.id, isouter=True).group_by( model.Post.id
+    ).filter(model.Post.title.contains(search)).limit(lim).offset(skip).all()
+
+
     print(lim)
     print(search)
-    return all_posts
+    return all_posts_vote
 
     # This will return which user is logged in
     # all_posts = db.query(model.Post).filter(model.Post.owner_id == current_user.id).all()
@@ -40,13 +49,40 @@ def get_posts(db :Session = Depends(get_db), current_user :int=Depends(Oauth2.ge
     #         "posts":all_posts}
     
 
-@router.get("/{id}", response_model=schema.ResponseModel)
-def get_post(id:int, db :Session = Depends(get_db), current_user :int=Depends(Oauth2.get_current_user)):
+# @router.get("/{id}", response_model=schema.ResponseModel)
+# def get_post(id:int, db :Session = Depends(get_db), current_user :int=Depends(Oauth2.get_current_user)):
 
-    post= db.query(model.Post).filter(model.Post.id == id).first()
+#     post= db.query(model.Post).filter(model.Post.id == id).first()
+
+#     if not post:
+#         raise HTTPException(status_code=404, detail="Post not found")
+#     return post
+@router.get("/{id}", response_model=schema.PostOut)
+def get_post(
+    id: int,
+    db: Session = Depends(get_db),
+    current_user: int = Depends(Oauth2.get_current_user)
+):
+
+    post = db.query(
+        model.Post,
+        func.count(model.Vote.post_id).label("votes")
+    ).join(
+        model.Vote,
+        model.Vote.post_id == model.Post.id,
+        isouter=True
+    ).group_by(
+        model.Post.id
+    ).filter(
+        model.Post.id == id
+    ).first()
 
     if not post:
-        raise HTTPException(status_code=404, detail="Post not found")
+        raise HTTPException(
+            status_code=404,
+            detail="Post not found"
+        )
+
     return post
 
 
