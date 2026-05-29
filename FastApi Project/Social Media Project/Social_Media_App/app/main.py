@@ -5,6 +5,8 @@ from .router import post, user, auth, vote
 from .config import settings
 
 app = FastAPI()
+
+# this line will create the physical table in a db from the schemas.
 model.Base.metadata.create_all(bind=engine)
 
 @app.get("/")
